@@ -30,9 +30,9 @@ int readline(int readch, char *buffer, int len) {
 
     if (readch > 0) {
         switch (readch) {
-            case '\r': // Ignore CR
+            case '\n': // Ignore CR
                 break;
-            case '\n': // Return on new-line
+            case '\r': // Return on new-line
                 rpos = pos;
                 pos = 0;  // Reset position index ready for next time
                 return rpos;
@@ -53,24 +53,31 @@ void setup() {
   
   /* Initialize serial port for debug messages. */
   Serial.begin(9600);
+  //hi
   
   /* Initialize CONTROLLINO RS485 direction control DE/RE pins and Serial3 */
   Controllino_RS485Init(9600);
-  Controllino_RS485RxEnable();
+  //Controllino_RS485RxEnable();
 
   Serial.println("Recieving RS485...");
 }
 
 void loop() {
   
- Controllino_RS485RxEnable();
-  delay(1000);
-  Serial.println("hallo");
+ //Controllino_RS485RxEnable();
+ 
   
-  if (readline(Serial3.read(), buf, 80) > 0) {
+  
+  if (readline(Serial3.read(), buf, 80) == 8) {
         Serial.print("You entered: >");
         Serial.print(buf);
         Serial.println("<");
+        delay(500);
+        char* buf_trunc = buf + 2
+        Serial.println(buf_trunc);
+        float number1 = strtof(buf_trunc);
+        Serial.print("nach atoi: ");
+        Serial.println(number1);
     }
   }
   
