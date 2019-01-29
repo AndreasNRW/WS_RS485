@@ -1,4 +1,5 @@
 #include <SPI.h>
+#include <stdlib.h>
 #include <Controllino.h>  /* Usage of CONTROLLINO library allows you to use CONTROLLINO_xx aliases in your sketch. */
 
 /*
@@ -73,9 +74,10 @@ void loop() {
         Serial.print(buf);
         Serial.println("<");
         delay(500);
-        char* buf_trunc = buf + 2
+        char* buf_trunc = buf + 2;
+        Serial.print("nach Umwandlung");
         Serial.println(buf_trunc);
-        float number1 = strtof(buf_trunc);
+        float number1 = atof(buf_trunc);
         Serial.print("nach atoi: ");
         Serial.println(number1);
     }
