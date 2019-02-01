@@ -59,6 +59,9 @@ int readline(int readch, char *buffer, int len) {
 
     if (readch > 0) {
         switch (readch) {
+            case '-':
+                Serial.println("nö");
+                return;
             case '\n': // Ignore CR
                 break;
             case '\r': // Return on new-line
@@ -92,7 +95,7 @@ void setup() {
   Controllino_RS485Init(9600);
   //Controllino_RS485RxEnable();
 
-  Serial.println("Recieving RS485...");
+  //Serial.println("Recieving RS485...");
 }
 
 void loop() {
@@ -102,25 +105,29 @@ void loop() {
   
   
   if (readline(Serial3.read(), buf, 80) == 8) {
-        Serial.print("You entered: >");
+        Serial.print("Waschstrasse aktuell KG: >");
         Serial.print(buf);
         Serial.println("<");
         delay(500);
         char* buf_trunc = buf + 2;
-        Serial.print("nach Umwandlung");
-        Serial.println(buf_trunc);
-        float number1 = atof(buf_trunc);
-        Serial.print("nach atoi: ");
-        Serial.println(number1);
+        //Serial.print("nach Umwandlung");
+        //Serial.println(buf_trunc);
+        int number1 = atoi(buf_trunc);
+        //Serial.print("nach atoi: ");
+        //Serial.println(number1);
+        //number1 = 15;
         if (conn.connect(mysql_server, mysql_port,  mysql_user,  mysql_password)) {
           delay(1000);
           // Initiate the query class instance
           MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);
-          sprintf(query, INSERT_DATA, number1);
+          //sprintf(query, INSERT_DATA, number1);
+          sprintf(query, "INSERT INTO digiwash.liveKG (KG) VALUES (%d)", number1);
           // Execute the query
+          Serial.println(query);
           cur_mem->execute(query);
+          delay(500);
           delete cur_mem;
-          Serial.println("Data recorded.");          
+          //Serial.println("Data recorded.");          
         }
   else
   {
