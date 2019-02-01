@@ -1,6 +1,12 @@
+#include <WatchdogLog.h>
+
 #include <SPI.h>
 #include <stdlib.h>
 #include <Controllino.h>  /* Usage of CONTROLLINO library allows you to use CONTROLLINO_xx aliases in your sketch. */
+#include <Ethernet.h>
+#include <MySQL_Connection.h>
+#include <MySQL_Cursor.h>
+
 
 /*
   CONTROLLINO - Demonstration of RS485 interface usage, Version 02.00
@@ -22,6 +28,28 @@
   (Check https://github.com/CONTROLLINO-PLC/CONTROLLINO_Library for the latest CONTROLLINO related software stuff.)
 */
 
+
+byte mac_addr[] = { 0xAE, 0xAD, 0xAE, 0xEF, 0xFE, 0xED };
+
+
+IPAddress ip(192, 168, 100, 120);
+IPAddress gateway(192, 168, 100, 1);
+IPAddress dnsserver(192, 168, 100, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress mysql_server(192, 168, 100, 102);
+
+//IPAddress server_addr(10,0,1,35);  // IP of the MySQL *server* here
+char mysql_user[] = "root";              // MySQL user login username
+char mysql_password[] = "CATCAT";        // MySQL user login password
+int mysql_port = 3306;
+
+// Sample query
+char INSERT_DATA[] = "INSERT INTO digiwash.liveKG (KG) VALUES (%s)";
+char query[128];
+char temperature[10];
+
+EthernetClient client;
+MySQL_Connection conn((Client *)&client);
 
 char buf[80];
 
@@ -55,8 +83,12 @@ void setup() {
   /* Initialize serial port for debug messages. */
   Serial.begin(9600);
   //hi
-  
+  Ethernet.begin(mac_addr, ip, dnsserver, gateway, subnet);
   /* Initialize CONTROLLINO RS485 direction control DE/RE pins and Serial3 */
+  
+  Serial.println(Ethernet.localIP());
+  
+  
   Controllino_RS485Init(9600);
   //Controllino_RS485RxEnable();
 
@@ -80,6 +112,21 @@ void loop() {
         float number1 = atof(buf_trunc);
         Serial.print("nach atoi: ");
         Serial.println(number1);
+        if (conn.connect(mysql_server, mysql_port,  mysql_user,  mysql_password)) {
+          delay(1000);
+          // Initiate the query class instance
+          MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);
+          sprintf(query, INSERT_DATA, number1);
+          // Execute the query
+          cur_mem->execute(query);
+          delete cur_mem;
+          Serial.println("Data recorded.");          
+        }
+  else
+  {
+    wdt_enable(WDTO_15MS);
+    while (true) {};  
+  }
     }
   }
   
