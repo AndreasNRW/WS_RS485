@@ -52,6 +52,7 @@ EthernetClient client;
 MySQL_Connection conn((Client *)&client);
 
 char buf[80];
+char get_netto[] = "GN\r";
 
 int readline(int readch, char *buffer, int len) {
     static int pos = 0;
@@ -60,7 +61,7 @@ int readline(int readch, char *buffer, int len) {
     if (readch > 0) {
         switch (readch) {
             case '-':
-                Serial.println("nö");
+                //Serial.println("nö");
                 return;
             case '\n': // Ignore CR
                 break;
@@ -72,6 +73,7 @@ int readline(int readch, char *buffer, int len) {
                 if (pos < len-1) {
                     buffer[pos++] = readch;
                     buffer[pos] = 0;
+                    //Serial.println(readch);
                 }
         }
     }
@@ -84,7 +86,7 @@ int readline(int readch, char *buffer, int len) {
 void setup() {
   
   /* Initialize serial port for debug messages. */
-  Serial.begin(9600);
+  Serial.begin(38400);
   //hi
   Ethernet.begin(mac_addr, ip, dnsserver, gateway, subnet);
   /* Initialize CONTROLLINO RS485 direction control DE/RE pins and Serial3 */
@@ -92,8 +94,8 @@ void setup() {
   Serial.println(Ethernet.localIP());
   
   
-  Controllino_RS485Init(9600);
-  //Controllino_RS485RxEnable();
+  Controllino_RS485Init(38400);
+  //
 
   //Serial.println("Recieving RS485...");
 }
@@ -101,14 +103,34 @@ void setup() {
 void loop() {
   
  //Controllino_RS485RxEnable();
- 
+
+// datensenden();
+ //delay(500);
+ datenempfangen();
+// delay(100);
   
   
+
+  }
+
+
+void datensenden() {
+  Controllino_RS485TxEnable();
+    Serial3.write(get_netto);
+    Serial3.flush(); // wait until the trasmission is complete
+  
+}
+
+
+
+void datenempfangen() {
+  //Serial.println("empfange");
+  //Controllino_RS485RxEnable();
   if (readline(Serial3.read(), buf, 80) == 8) {
         Serial.print("Waschstrasse aktuell KG: >");
         Serial.print(buf);
         Serial.println("<");
-        delay(500);
+        //delay(500);
         char* buf_trunc = buf + 2;
         //Serial.print("nach Umwandlung");
         //Serial.println(buf_trunc);
@@ -117,7 +139,7 @@ void loop() {
         //Serial.println(number1);
         //number1 = 15;
         if (conn.connect(mysql_server, mysql_port,  mysql_user,  mysql_password)) {
-          delay(1000);
+          //delay(1000);
           // Initiate the query class instance
           MySQL_Cursor *cur_mem = new MySQL_Cursor(&conn);
           //sprintf(query, INSERT_DATA, number1);
@@ -125,8 +147,13 @@ void loop() {
           // Execute the query
           Serial.println(query);
           cur_mem->execute(query);
-          delay(500);
+          //delay(500);
           delete cur_mem;
+          digitalWrite(CONTROLLINO_D0, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(100);                          // wait for 100 milliseconds which is 1/10 of a second 
+  digitalWrite(CONTROLLINO_D0, LOW);    // turn the LED off by making the voltage LOW
+          wdt_enable(WDTO_15MS);
+    while (true) {};
           //Serial.println("Data recorded.");          
         }
   else
@@ -135,7 +162,8 @@ void loop() {
     while (true) {};  
   }
     }
-  }
+  
+}
   
 
 
